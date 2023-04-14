@@ -26,6 +26,7 @@ void processInput(GLFWwindow *window);
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
 
+
 //for skybox
 unsigned int loadTexture(const char *path);
 unsigned int loadCubemap(vector<std::string> faces);
@@ -60,8 +61,9 @@ struct ProgramState {
     bool ImGuiEnabled = false;
     Camera camera;
     bool CameraMouseMovementUpdateEnabled = true;
-    glm::vec3 backpackPosition = glm::vec3(0.0f, -15.0f, 0.0f);
-    float backpackScale = 2.0f;
+    glm::vec3 catPosition = glm::vec3(5.0f, -15.0f, 0.0f);
+    float catScale = 1.5f;
+    //float lanternScale=5.0f;
     PointLight pointLight;
     ProgramState()
             : camera(glm::vec3(0.0f, 0.0f, 3.0f)) {}
@@ -144,7 +146,7 @@ int main() {
     stbi_set_flip_vertically_on_load(true);
 
     programState = new ProgramState;
-    programState->LoadFromFile("resources/program_state.txt");
+    //programState->LoadFromFile("resources/program_state.txt");
     if (programState->ImGuiEnabled) {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     }
@@ -162,16 +164,21 @@ int main() {
     // configure global opengl state
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
 
     // build and compile shaders
     // -------------------------
     Shader ourShader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
     Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
+    Shader lanternShader("resources/shaders/lantern.vs", "resources/shaders/lantern.fs");
 
     // load models
     // -----------
-    Model ourModel("resources/objects/tonchi-pickles/source/tonchi/uku-chang.vox.obj");
-    ourModel.SetShaderTextureNamePrefix("material.");
+    Model catModel("resources/objects/tonchi-pickles/source/tonchi/uku-chang.vox.obj");
+    catModel.SetShaderTextureNamePrefix("material.");
+
+    Model lanternModel("resources/objects/japanese-style-lantern/source/JapaneseLantern.fbx");
 
     PointLight& pointLight = programState->pointLight;
     pointLight.position = glm::vec3(4.0f, 4.0, 0.0);
@@ -180,8 +187,18 @@ int main() {
     pointLight.specular = glm::vec3(1.0, 1.0, 1.0);
 
     pointLight.constant = 1.0f;
-    pointLight.linear = 0.09f;
-    pointLight.quadratic = 0.032f;
+    pointLight.linear = 0.00f;
+    pointLight.quadratic = 0.0f;
+
+    //lantern stuff
+    glm::vec3 lanternPositions[] = {
+            glm::vec3(0.0f, 0.0f, 0.0f),
+            glm::vec3(0.0f, 0.0f, 10.0f),
+            glm::vec3(15.0f, 0.0f, 10.0f),
+            glm::vec3(15.0f, 0.0f, 0.0f)
+
+    };
+
     float skyboxVertices[] = {
             // positions
             -1.0f,  1.0f, -1.0f,
@@ -292,16 +309,31 @@ int main() {
         ourShader.setMat4("projection", projection);
         ourShader.setMat4("view", view);
 
+
+
         // render the loaded model
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model,
-                               programState->backpackPosition); // translate it down so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(programState->backpackScale));    // it's a bit too big for our scene, so scale it down
+                               programState->catPosition); // translate it down so it's at the center of the scene
+        model = glm::scale(model, glm::vec3(programState->catScale));    // it's a bit too big for our scene, so scale it down
         ourShader.setMat4("model", model);
-        ourModel.Draw(ourShader);
+        catModel.Draw(ourShader);
+
+        lanternShader.setMat4("projection", projection);
+        lanternShader.setMat4("view", view);
+        for (unsigned int i = 0; i <4 ; i++)
+        {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, lanternPositions[i]);
+            model = glm::scale(model, glm::vec3(1.0f)); // Make it a smaller cube
+            lanternShader.setMat4("model", model);
+            lanternModel.Draw(lanternShader);
+            //cout<<lanternPositions.size();
+        }
 
 
         // draw skybox as last
+        glDisable(GL_CULL_FACE);
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         skyboxShader.use();
         view = glm::mat4(glm::mat3(programState->camera.GetViewMatrix())); // remove translation from the view matrix
@@ -316,8 +348,10 @@ int main() {
         glDepthFunc(GL_LESS); // set depth function back to default
 
 
+
         if (programState->ImGuiEnabled)
             DrawImGui(programState);
+        //glEnable(GL_CULL_FACE);
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
@@ -402,8 +436,8 @@ void DrawImGui(ProgramState *programState) {
         ImGui::Text("Hello text");
         ImGui::SliderFloat("Float slider", &f, 0.0, 1.0);
         ImGui::ColorEdit3("Background color", (float *) &programState->clearColor);
-        ImGui::DragFloat3("Backpack position", (float*)&programState->backpackPosition);
-        ImGui::DragFloat("Backpack scale", &programState->backpackScale, 0.05, 0.1, 4.0);
+        ImGui::DragFloat3("Cat position", (float*)&programState->catPosition);
+        ImGui::DragFloat("Cat scale", &programState->catScale, 0.05, 0.1, 4.0);
 
         ImGui::DragFloat("pointLight.constant", &programState->pointLight.constant, 0.05, 0.0, 1.0);
         ImGui::DragFloat("pointLight.linear", &programState->pointLight.linear, 0.05, 0.0, 1.0);
@@ -465,3 +499,4 @@ unsigned int loadCubemap(vector<std::string> faces)
 
     return textureID;
 }
+
