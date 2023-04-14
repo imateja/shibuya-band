@@ -165,7 +165,7 @@ int main() {
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
-    glCullFace(GL_FRONT);
+    glCullFace(GL_BACK);
 
     // build and compile shaders
     // -------------------------
@@ -333,7 +333,7 @@ int main() {
 
 
         // draw skybox as last
-        glDisable(GL_CULL_FACE);
+        //glDisable(GL_CULL_FACE);
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         skyboxShader.use();
         view = glm::mat4(glm::mat3(programState->camera.GetViewMatrix())); // remove translation from the view matrix
@@ -348,10 +348,10 @@ int main() {
         glDepthFunc(GL_LESS); // set depth function back to default
 
 
-
+        //glEnable(GL_CULL_FACE);
         if (programState->ImGuiEnabled)
             DrawImGui(programState);
-        //glEnable(GL_CULL_FACE);
+
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
