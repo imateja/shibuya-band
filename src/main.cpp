@@ -179,16 +179,8 @@ int main() {
     catModel.SetShaderTextureNamePrefix("material.");
 
     Model lanternModel("resources/objects/japanese-style-lantern/source/JapaneseLantern.fbx");
+    lanternModel.SetShaderTextureNamePrefix("material.");
 
-    PointLight& pointLight = programState->pointLight;
-    pointLight.position = glm::vec3(4.0f, 4.0, 0.0);
-    pointLight.ambient = glm::vec3(0.1, 0.1, 0.1);
-    pointLight.diffuse = glm::vec3(0.6, 0.6, 0.6);
-    pointLight.specular = glm::vec3(1.0, 1.0, 1.0);
-
-    pointLight.constant = 1.0f;
-    pointLight.linear = 0.00f;
-    pointLight.quadratic = 0.0f;
 
     //lantern stuff
     glm::vec3 lanternPositions[] = {
