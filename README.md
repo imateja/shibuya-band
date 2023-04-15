@@ -1,11 +1,32 @@
-# project_base
-Prazan projekat sa pratećim bibliotekama koje koristimo na času. 
+# Shibuya Animal Band
 
-# Uputstvo
-1. `git clone https://github.com/matf-racunarska-grafika/project_base.git`
-2. CLion -> Open -> path/to/my/project_base
-3. Main se nalazi u src/main.cpp
-4. Cpp fajlovi idu u src folder
-5. Zaglavlja (h i hpp) fajlovi idu u include
-6. Šejderi idu u folder shaders. `Vertex shader` ima ekstenziju `.vs`, `fragment shader` ima ekstenziju `.fs`
-7. ALT+SHIFT+F10 -> project_base -> run
+This project is a C++ program created using OpenGL, GLFW, GLM and Glad.
+## Features
+
+- __3D models__: animal band, kanji lights, flag
+- __Lighting__: directional, point and spotlight implemented using Blinn-Phong model
+- __Shaders__: written in GLSL
+- __ImGui__ interface
+- __Skybox cubemaps__: (large)cube that encompases the entire scene, contains 6 images
+- __Face culling__: if a side of an object cannot be seen, don't render it
+- __Blending__: for rendering transparent objects
+- __HDR__
+- __Bloom__
+
+## Interaction
+By pressing certain keys you can interact with the scene
+| Key | Action |
+| ------ | ------ |
+| W | Camera forward |
+| A | Camera left |
+| S | Camera back |
+| D | Camera right |
+| Space | Camera up |
+| LCtrl | Camera down |
+| B | Toggle Phong/Blinn-Phong lighting model |
+| F | Toggle spotlight |
+
+## [Demo Video](https://www.youtube.com/watch?v=nLvkagt0y2I)
+
+
+
