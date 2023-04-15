@@ -26,9 +26,8 @@ void processInput(GLFWwindow *window);
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
 
-
-//for skybox
 unsigned int loadTexture(const char *path);
+
 unsigned int loadCubemap(vector<std::string> faces);
 
 // settings
@@ -36,7 +35,6 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 // camera
-
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -62,14 +60,14 @@ struct ProgramState {
     Camera camera;
     bool CameraMouseMovementUpdateEnabled = true;
     glm::vec3 catPosition = glm::vec3(5.0f, -15.0f, 0.0f);
-    glm::vec3 umbrellaPos= glm::vec3(15.0f, 10.0f,-10.0f);
+    glm::vec3 flagPos= glm::vec3(15.0f, 10.0f,-10.0f);
     float catScale = 1.5f;
     float flagScale = 5.0;
     //float catBandScale=1.5f;
-    //float lanternScale=5.0f;
+    //float kanjiScale=5.0f;
     PointLight pointLight;
     ProgramState()
-            : camera(glm::vec3(0.0f, 0.0f, 3.0f)) {}
+            : camera(glm::vec3(9.0f, 6.0f, 31.0f)) {}
 
     void SaveToFile(std::string filename);
 
@@ -96,13 +94,7 @@ void ProgramState::LoadFromFile(std::string filename) {
         in >> clearColor.r
            >> clearColor.g
            >> clearColor.b
-           >> ImGuiEnabled
-           >> camera.Position.x
-           >> camera.Position.y
-           >> camera.Position.z
-           >> camera.Front.x
-           >> camera.Front.y
-           >> camera.Front.z;
+           >> ImGuiEnabled;
     }
 }
 
@@ -149,7 +141,7 @@ int main() {
     stbi_set_flip_vertically_on_load(true);
 
     programState = new ProgramState;
-    //programState->LoadFromFile("resources/program_state.txt");
+    programState->LoadFromFile("resources/program_state.txt");
     if (programState->ImGuiEnabled) {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     }
@@ -158,8 +150,6 @@ int main() {
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     (void) io;
-
-
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330 core");
@@ -174,25 +164,25 @@ int main() {
 
     // build and compile shaders
     // -------------------------
-    Shader ourShader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
+    Shader ourShader("resources/shaders/lighting.vs", "resources/shaders/lighting.fs");
     Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
-    Shader lanternShader("resources/shaders/lantern.vs", "resources/shaders/lantern.fs");
+    Shader kanjiShader("resources/shaders/kanji.vs", "resources/shaders/kanji.fs");
     Shader blendingShader("resources/shaders/blending.vs", "resources/shaders/blending.fs");
 
     // load models
     // -----------
-    Model catModel("resources/objects/tonchi-pickles/source/tonchi/uku-chang.vox.obj");
+    Model catModel("resources/objects/cat/source/tonchi/uku-chang.vox.obj");
     catModel.SetShaderTextureNamePrefix("material.");
 
-    Model lanternModel("resources/objects/kanji/kirei_beautiful.obj");
-    lanternModel.SetShaderTextureNamePrefix("material.");
+    Model kanjiModel("resources/objects/kanji/kirei_beautiful.obj");
+    kanjiModel.SetShaderTextureNamePrefix("material.");
 
-    Model umbrellaModel("resources/objects/japanese-flag/source/JapaneseFlag/JapaneseFlag.obj");
-    umbrellaModel.SetShaderTextureNamePrefix("material.");
+    Model flagModel("resources/objects/japanese-flag/source/JapaneseFlag/JapaneseFlag.obj");
+    flagModel.SetShaderTextureNamePrefix("material.");
 
 
-    //lantern stuff
-    glm::vec3 lanternPositions[] = {
+    //point light positions
+    glm::vec3 kanjiPositions[] = {
             glm::vec3(0.0f, 0.0f, 0.0f),
             glm::vec3(0.0f, 0.0f, 10.0f),
             glm::vec3(15.0f, 0.0f, 10.0f),
@@ -298,16 +288,15 @@ int main() {
         glClearColor(programState->clearColor.r, programState->clearColor.g, programState->clearColor.b, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // don't forget to enable shader before setting uniforms
+        // cat model
         ourShader.use();
-
         // directional light
         ourShader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
         ourShader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
         ourShader.setVec3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
         ourShader.setVec3("dirLight.specular", 0.5f, 0.5f, 0.5f);
         // point light 1
-        ourShader.setVec3("pointLights[0].position", lanternPositions[0]);
+        ourShader.setVec3("pointLights[0].position", kanjiPositions[0]);
         ourShader.setVec3("pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
         ourShader.setVec3("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
         ourShader.setVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
@@ -315,7 +304,7 @@ int main() {
         ourShader.setFloat("pointLights[0].linear", 0.09);
         ourShader.setFloat("pointLights[0].quadratic", 0.032);
         // point light 2
-        ourShader.setVec3("pointLights[1].position", lanternPositions[1]);
+        ourShader.setVec3("pointLights[1].position", kanjiPositions[1]);
         ourShader.setVec3("pointLights[1].ambient", 0.05f, 0.05f, 0.05f);
         ourShader.setVec3("pointLights[1].diffuse", 0.8f, 0.8f, 0.8f);
         ourShader.setVec3("pointLights[1].specular", 1.0f, 1.0f, 1.0f);
@@ -323,15 +312,15 @@ int main() {
         ourShader.setFloat("pointLights[1].linear", 0.09);
         ourShader.setFloat("pointLights[1].quadratic", 0.032);
         // point light 3
-        ourShader.setVec3("pointLights[2].position", lanternPositions[2]);
+        ourShader.setVec3("pointLights[2].position", kanjiPositions[2]);
         ourShader.setVec3("pointLights[2].ambient", 0.05f, 0.05f, 0.05f);
         ourShader.setVec3("pointLights[2].diffuse", 0.8f, 0.8f, 0.8f);
         ourShader.setVec3("pointLights[2].specular", 1.0f, 1.0f, 1.0f);
-        ourShader.setFloat("pointLights[2].constant", 100.0f);
-        ourShader.setFloat("pointLights[2].linear", 100.09);
+        ourShader.setFloat("pointLights[2].constant", 1.0f);
+        ourShader.setFloat("pointLights[2].linear", 0.09);
         ourShader.setFloat("pointLights[2].quadratic", 0.032);
         // point light 4
-        ourShader.setVec3("pointLights[3].position", lanternPositions[3]);
+        ourShader.setVec3("pointLights[3].position", kanjiPositions[3]);
         ourShader.setVec3("pointLights[3].ambient", 0.05f, 0.05f, 0.05f);
         ourShader.setVec3("pointLights[3].diffuse", 0.8f, 0.8f, 0.8f);
         ourShader.setVec3("pointLights[3].specular", 1.0f, 1.0f, 1.0f);
@@ -353,7 +342,7 @@ int main() {
 
         ourShader.setVec3("viewPosition", programState->camera.Position);
         ourShader.setFloat("material.shininess", 32.0f);
-        // view/projection transformations
+
         glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom),
                                                 (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = programState->camera.GetViewMatrix();
@@ -361,35 +350,30 @@ int main() {
         ourShader.setMat4("view", view);
 
 
-
-        // render the loaded model
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model,
-                               programState->catPosition); // translate it down so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(programState->catScale));    // it's a bit too big for our scene, so scale it down
+        model = glm::translate(model,programState->catPosition);
+        model = glm::scale(model, glm::vec3(programState->catScale));
         ourShader.setMat4("model", model);
         catModel.Draw(ourShader);
 
+        //point light model
+        kanjiShader.use();
+        kanjiShader.setMat4("projection", projection);
+        kanjiShader.setMat4("view", view);
 
-        lanternShader.use();
-        lanternShader.setMat4("projection", projection);
-        lanternShader.setMat4("view", view);
         for (unsigned int i = 0; i <4 ; i++)
         {
             model = glm::mat4(1.0f);
-            model = glm::translate(model, lanternPositions[i]);
+            model = glm::translate(model, kanjiPositions[i]);
             model = glm::scale(model, glm::vec3(0.2f)); // Make it a smaller cube
-            lanternShader.setMat4("model", model);
-            lanternModel.Draw(lanternShader);
-            //cout<<lanternPositions.size();
+            kanjiShader.setMat4("model", model);
+            kanjiModel.Draw(kanjiShader);
         }
 
-
-        // draw skybox as last
-        //glDisable(GL_CULL_FACE);
-        glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+        //skybox
+        glDepthFunc(GL_LEQUAL);
         skyboxShader.use();
-        view = glm::mat4(glm::mat3(programState->camera.GetViewMatrix())); // remove translation from the view matrix
+        view = glm::mat4(glm::mat3(programState->camera.GetViewMatrix()));
         skyboxShader.setMat4("view", view);
         skyboxShader.setMat4("projection", projection);
         // skybox cube
@@ -400,23 +384,18 @@ int main() {
         glBindVertexArray(0);
         glDepthFunc(GL_LESS); // set depth function back to default
 
+        //flag model and blending
         blendingShader.use();
         blendingShader.setMat4("projection", projection);
         view = programState->camera.GetViewMatrix();
         blendingShader.setMat4("view", view);
         model = glm::mat4(1.0f);
-        model = glm::translate(model,
-                               programState->umbrellaPos);
-        //model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f,0.0f,1.0f));
-        model = glm::scale(model, glm::vec3(programState->flagScale));    // it's a bit too big for our scene, so scale it down
+        model = glm::translate(model,programState->flagPos);
+        model = glm::scale(model, glm::vec3(programState->flagScale));
         blendingShader.setMat4("model", model);
-        umbrellaModel.Draw(blendingShader);
+        flagModel.Draw(blendingShader);
 
 
-
-
-
-        //glEnable(GL_CULL_FACE);
         if (programState->ImGuiEnabled)
             DrawImGui(programState);
 
