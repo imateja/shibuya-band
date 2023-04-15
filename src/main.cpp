@@ -77,7 +77,7 @@ struct ProgramState {
     glm::vec3 flagPos= glm::vec3(15.0f, 10.0f,-10.0f);
     float catScale = 1.5f;
     float flagScale = 5.0;
-    float kanjiScale;
+    float kanjiScale=0.2f;
     bool hdr = false;
     bool bloom = false;
     float exposure = 0.197f;
@@ -379,32 +379,32 @@ int main() {
         lightingShader.setVec3("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
         lightingShader.setVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
         lightingShader.setFloat("pointLights[0].constant", 1.0f);
-        lightingShader.setFloat("pointLights[0].linear", 0.09);
-        lightingShader.setFloat("pointLights[0].quadratic", 0.032);
+        lightingShader.setFloat("pointLights[0].linear", 0.09f);
+        lightingShader.setFloat("pointLights[0].quadratic", 0.032f);
         // point light 2
         lightingShader.setVec3("pointLights[1].position", kanjiPositions[1]);
         lightingShader.setVec3("pointLights[1].ambient", 0.05f, 0.05f, 0.05f);
         lightingShader.setVec3("pointLights[1].diffuse", 0.8f, 0.8f, 0.8f);
         lightingShader.setVec3("pointLights[1].specular", 1.0f, 1.0f, 1.0f);
         lightingShader.setFloat("pointLights[1].constant", 1.0f);
-        lightingShader.setFloat("pointLights[1].linear", 0.09);
-        lightingShader.setFloat("pointLights[1].quadratic", 0.032);
+        lightingShader.setFloat("pointLights[1].linear", 0.09f);
+        lightingShader.setFloat("pointLights[1].quadratic", 0.032f);
         // point light 3
         lightingShader.setVec3("pointLights[2].position", kanjiPositions[2]);
         lightingShader.setVec3("pointLights[2].ambient", 0.05f, 0.05f, 0.05f);
         lightingShader.setVec3("pointLights[2].diffuse", 0.8f, 0.8f, 0.8f);
         lightingShader.setVec3("pointLights[2].specular", 1.0f, 1.0f, 1.0f);
         lightingShader.setFloat("pointLights[2].constant", 1.0f);
-        lightingShader.setFloat("pointLights[2].linear", 0.09);
-        lightingShader.setFloat("pointLights[2].quadratic", 0.032);
+        lightingShader.setFloat("pointLights[2].linear", 0.09f);
+        lightingShader.setFloat("pointLights[2].quadratic", 0.032f);
         // point light 4
         lightingShader.setVec3("pointLights[3].position", kanjiPositions[3]);
         lightingShader.setVec3("pointLights[3].ambient", 0.05f, 0.05f, 0.05f);
         lightingShader.setVec3("pointLights[3].diffuse", 0.8f, 0.8f, 0.8f);
         lightingShader.setVec3("pointLights[3].specular", 1.0f, 1.0f, 1.0f);
         lightingShader.setFloat("pointLights[3].constant", 1.0f);
-        lightingShader.setFloat("pointLights[3].linear", 0.09);
-        lightingShader.setFloat("pointLights[3].quadratic", 0.032);
+        lightingShader.setFloat("pointLights[3].linear", 0.09f);
+        lightingShader.setFloat("pointLights[3].quadratic", 0.032f);
         // spotLight
         lightingShader.setVec3("spotLight.position", programState->camera.Position);
         lightingShader.setVec3("spotLight.direction",programState->camera.Front);
@@ -433,7 +433,7 @@ int main() {
         float sinus = sin(currentFrame);
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model,programState->catPosition);
-        model = glm::translate(model, glm::vec3(0.0f,sinus,sinus));
+        model = glm::translate(model, glm::vec3(0.0f,sinus,0.0f));
         model = glm::scale(model, glm::vec3(programState->catScale));
         lightingShader.setMat4("model", model);
         catModel.Draw(lightingShader);
@@ -447,7 +447,8 @@ int main() {
         {
             model = glm::mat4(1.0f);
             model = glm::translate(model, kanjiPositions[i]);
-            model = glm::scale(model, glm::vec3(0.2f)); // Make it a smaller cube
+            model = glm::rotate(model,currentFrame,glm::vec3(1.0f,1.0f,1.0f));
+            model = glm::scale(model, glm::vec3(programState->kanjiScale)); // Make it a smaller cube
             kanjiShader.setMat4("model", model);
             kanjiModel.Draw(kanjiShader);
         }
@@ -473,6 +474,7 @@ int main() {
         blendingShader.setMat4("view", view);
         model = glm::mat4(1.0f);
         model = glm::translate(model,programState->flagPos);
+
         //model = glm::rotate(model,glm::vec3(1.0f,0.0f,0.0f));
         model = glm::scale(model, glm::vec3(programState->flagScale));
         blendingShader.setMat4("model", model);
@@ -611,17 +613,34 @@ void DrawImGui(ProgramState *programState) {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
-    
-
     {
-        ImGui::Begin("Camera info");
-        const Camera& c = programState->camera;
-        ImGui::Text("Camera position: (%f, %f, %f)", c.Position.x, c.Position.y, c.Position.z);
-        ImGui::Text("(Yaw, Pitch): (%f, %f)", c.Yaw, c.Pitch);
-        ImGui::Text("Camera front: (%f, %f, %f)", c.Front.x, c.Front.y, c.Front.z);
-        ImGui::Checkbox("Camera mouse update", &programState->CameraMouseMovementUpdateEnabled);
+        static float f = 0.0f;
+        ImGui::Begin("Settings");
+        ImGui::SliderFloat("Float slider", &f, 0.0, 1.0);
+        ImGui::ColorEdit3("Background color", (float *) &programState->clearColor);
+        ImGui::DragFloat3("Cat position", (float*)&programState->catPosition);
+        ImGui::DragFloat("Cat scale", &programState->catScale, 0.05, 0.1, 4.0);
+        ImGui::DragFloat("Kanji scale", &programState->kanjiScale, 0.05, 0.1, 4.0);
+
+        ImGui::Text("Hdr/Bloom");
+        ImGui::Checkbox("HDR", &programState->hdr);
+        if (programState->hdr) {
+            ImGui::Checkbox("Bloom", &programState->bloom);
+            ImGui::DragFloat("Exposure", &programState->exposure, 0.05f, 0.0f, 5.0f);
+            ImGui::DragFloat("Gamma factor", &programState->gamma, 0.05f, 0.0f, 4.0f);
+        }
+        ImGui::Text("Kernel effects");
+        ImGui::RadioButton("Blur", &programState->kernelEffects, 0);
+        ImGui::RadioButton("Grayscale", &programState->kernelEffects, 1);
+        ImGui::RadioButton("Edge detection", &programState->kernelEffects, 2);
+        ImGui::RadioButton("None", &programState->kernelEffects, 3);
+
+        ImGui::DragFloat("pointLight.constant", &programState->pointLight.constant, 0.05, 0.0, 1.0);
+        ImGui::DragFloat("pointLight.linear", &programState->pointLight.linear, 0.05, 0.0, 1.0);
+        ImGui::DragFloat("pointLight.quadratic", &programState->pointLight.quadratic, 0.05, 0.0, 1.0);
         ImGui::End();
     }
+
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
