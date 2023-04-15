@@ -62,7 +62,10 @@ struct ProgramState {
     Camera camera;
     bool CameraMouseMovementUpdateEnabled = true;
     glm::vec3 catPosition = glm::vec3(5.0f, -15.0f, 0.0f);
+    glm::vec3 umbrellaPos= glm::vec3(15.0f, 10.0f,-10.0f);
     float catScale = 1.5f;
+    float flagScale = 5.0;
+    //float catBandScale=1.5f;
     //float lanternScale=5.0f;
     PointLight pointLight;
     ProgramState()
@@ -164,6 +167,8 @@ int main() {
     // configure global opengl state
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
@@ -172,14 +177,18 @@ int main() {
     Shader ourShader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
     Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
     Shader lanternShader("resources/shaders/lantern.vs", "resources/shaders/lantern.fs");
+    Shader blendingShader("resources/shaders/blending.vs", "resources/shaders/blending.fs");
 
     // load models
     // -----------
     Model catModel("resources/objects/tonchi-pickles/source/tonchi/uku-chang.vox.obj");
     catModel.SetShaderTextureNamePrefix("material.");
 
-    Model lanternModel("resources/objects/japanese-style-lantern/source/JapaneseLantern.fbx");
+    Model lanternModel("resources/objects/kanji/kirei_beautiful.obj");
     lanternModel.SetShaderTextureNamePrefix("material.");
+
+    Model umbrellaModel("resources/objects/japanese-flag/source/JapaneseFlag/JapaneseFlag.obj");
+    umbrellaModel.SetShaderTextureNamePrefix("material.");
 
 
     //lantern stuff
@@ -257,8 +266,15 @@ int main() {
     stbi_set_flip_vertically_on_load(false);
     unsigned int cubemapTexture = loadCubemap(faces);
 
+    ourShader.use();
+    ourShader.setInt("material.diffuse", 0);
+    ourShader.setInt("material.specular", 1);
+
     skyboxShader.use();
     skyboxShader.setInt("skybox", 0);
+
+    blendingShader.use();
+    blendingShader.setInt("texture1", 0);
 
     // draw in wireframe
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -354,13 +370,15 @@ int main() {
         ourShader.setMat4("model", model);
         catModel.Draw(ourShader);
 
+
+        lanternShader.use();
         lanternShader.setMat4("projection", projection);
         lanternShader.setMat4("view", view);
         for (unsigned int i = 0; i <4 ; i++)
         {
             model = glm::mat4(1.0f);
             model = glm::translate(model, lanternPositions[i]);
-            model = glm::scale(model, glm::vec3(1.0f)); // Make it a smaller cube
+            model = glm::scale(model, glm::vec3(0.2f)); // Make it a smaller cube
             lanternShader.setMat4("model", model);
             lanternModel.Draw(lanternShader);
             //cout<<lanternPositions.size();
@@ -381,6 +399,21 @@ int main() {
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
         glDepthFunc(GL_LESS); // set depth function back to default
+
+        blendingShader.use();
+        blendingShader.setMat4("projection", projection);
+        view = programState->camera.GetViewMatrix();
+        blendingShader.setMat4("view", view);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model,
+                               programState->umbrellaPos);
+        //model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f,0.0f,1.0f));
+        model = glm::scale(model, glm::vec3(programState->flagScale));    // it's a bit too big for our scene, so scale it down
+        blendingShader.setMat4("model", model);
+        umbrellaModel.Draw(blendingShader);
+
+
+
 
 
         //glEnable(GL_CULL_FACE);
