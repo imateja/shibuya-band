@@ -26,7 +26,6 @@ By pressing certain keys you can interact with the scene
 | B | Toggle Phong/Blinn-Phong lighting model |
 | F | Toggle spotlight |
 
-## [Demo Video](https://www.youtube.com/watch?v=nLvkagt0y2I)
 
 
 
